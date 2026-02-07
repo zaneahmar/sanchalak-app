@@ -1355,23 +1355,28 @@ export const generateCustomerPaymentHistoryPDF = (customer, startDate, endDate) 
         fillColor: COLORS.primary,
         textColor: [255, 255, 255],
         fontStyle: 'bold',
-        fontSize: 9
+        fontSize: 8,
+        halign: 'center',
+        valign: 'middle'
       },
       bodyStyles: {
         fontSize: 7,
-        textColor: COLORS.text
+        textColor: COLORS.text,
+        halign: 'left',
+        valign: 'middle',
+        overflow: 'linebreak'
       },
       alternateRowStyles: {
         fillColor: [248, 249, 255]
       },
-      columnStyles: {
-        0: { cellWidth: 25 },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 28 },
-        3: { cellWidth: 28, halign: 'right', fontStyle: 'bold' },
-        4: { cellWidth: 30 },
-        5: { cellWidth: 'auto' }
-      },
+        columnStyles: {
+          0: { cellWidth: 'auto', halign: 'center' },
+          1: { cellWidth: 'auto', halign: 'center' },
+          2: { cellWidth: 'auto', halign: 'center' },
+          3: { cellWidth: 'auto', halign: 'center', fontStyle: 'bold' },
+          4: { cellWidth: 'auto', halign: 'center' },
+          5: { cellWidth: 'auto', halign: 'center' }
+        },
       didParseCell: (data) => {
         if (data.section === 'body' && data.column.index === 3) {
           const transaction = allTransactions[data.row.index];
@@ -1799,22 +1804,26 @@ export const generateVendorPaymentHistoryPDF = (vendor, startDate, endDate) => {
         fillColor: COLORS.success,
         textColor: [255, 255, 255],
         fontStyle: 'bold',
-        fontSize: 9
+        fontSize: 8,
+        halign: 'center',
+        valign: 'middle'
       },
       bodyStyles: {
-        fontSize: 8,
-        textColor: COLORS.text
+        fontSize: 7,
+        textColor: COLORS.text,
+        halign: 'left',
+        valign: 'middle',
+        overflow: 'linebreak'
       },
       columnStyles: {
-        0: { cellWidth: 25 },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 25 },
-        3: { cellWidth: 30, halign: 'right', textColor: COLORS.success, fontStyle: 'bold' },
-        4: { cellWidth: 30 },
-        5: { cellWidth: 50 }
+        0: { cellWidth: 'auto', halign: 'center' },
+        1: { cellWidth: 'auto', halign: 'center' },
+        2: { cellWidth: 'auto', halign: 'center' },
+        3: { cellWidth: 'auto', halign: 'right', textColor: COLORS.success, fontStyle: 'bold' },
+        4: { cellWidth: 'auto', halign: 'left' },
+        5: { cellWidth: 'auto', halign: 'left' }
       },
-      margin: { left: 15, right: 15 },
-      tableWidth: 'auto'
+      margin: { left: 15, right: 15 }
     });
     
     historyStartY = doc.lastAutoTable?.finalY + 10 || historyStartY + 50;
@@ -1856,22 +1865,26 @@ export const generateVendorPaymentHistoryPDF = (vendor, startDate, endDate) => {
         fillColor: COLORS.danger,
         textColor: [255, 255, 255],
         fontStyle: 'bold',
-        fontSize: 9
+        fontSize: 8,
+        halign: 'center',
+        valign: 'middle'
       },
       bodyStyles: {
-        fontSize: 8,
-        textColor: COLORS.text
+        fontSize: 7,
+        textColor: COLORS.text,
+        halign: 'left',
+        valign: 'middle',
+        overflow: 'linebreak'
       },
       columnStyles: {
-        0: { cellWidth: 25 },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 30, halign: 'right', textColor: COLORS.danger, fontStyle: 'bold' },
-        3: { cellWidth: 30 },
-        4: { cellWidth: 20 },
-        5: { cellWidth: 55 }
+        0: { cellWidth: 'auto', halign: 'center' },
+        1: { cellWidth: 'auto', halign: 'center' },
+        2: { cellWidth: 'auto', halign: 'right', textColor: COLORS.danger, fontStyle: 'bold' },
+        3: { cellWidth: 'auto', halign: 'left' },
+        4: { cellWidth: 'auto', halign: 'center' },
+        5: { cellWidth: 'auto', halign: 'left' }
       },
-      margin: { left: 15, right: 15 },
-      tableWidth: 'auto'
+      margin: { left: 15, right: 15 }
     });
     
     historyStartY = doc.lastAutoTable?.finalY + 10 || historyStartY + 50;
@@ -1907,22 +1920,26 @@ export const generateVendorPaymentHistoryPDF = (vendor, startDate, endDate) => {
         fillColor: [25, 118, 210],
         textColor: [255, 255, 255],
         fontStyle: 'bold',
-        fontSize: 9
+        fontSize: 8,
+        halign: 'center',
+        valign: 'middle'
       },
       bodyStyles: {
-        fontSize: 8,
-        textColor: COLORS.text
+        fontSize: 7,
+        textColor: COLORS.text,
+        halign: 'left',
+        valign: 'middle',
+        overflow: 'linebreak'
       },
       columnStyles: {
-        0: { cellWidth: 25 },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 30, halign: 'right', textColor: [25, 118, 210], fontStyle: 'bold' },
-        3: { cellWidth: 30 },
-        4: { cellWidth: 20 },
-        5: { cellWidth: 55 }
+        0: { cellWidth: 'auto', halign: 'center' },
+        1: { cellWidth: 'auto', halign: 'center' },
+        2: { cellWidth: 'auto', halign: 'right', textColor: [25, 118, 210], fontStyle: 'bold' },
+        3: { cellWidth: 'auto', halign: 'left' },
+        4: { cellWidth: 'auto', halign: 'center' },
+        5: { cellWidth: 'auto', halign: 'left' }
       },
-      margin: { left: 15, right: 15 },
-      tableWidth: 'auto'
+      margin: { left: 15, right: 15 }
     });
     
     historyStartY = doc.lastAutoTable?.finalY + 10 || historyStartY + 50;
