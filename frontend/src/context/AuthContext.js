@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
+import { setTokenExpiredCallback } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -31,7 +32,20 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  // Reset inactivity timer
+  // Setup token expiration callback
+  useEffect(() => {
+    // Set callback to handle token expiration from API responses
+    setTokenExpiredCallback((errorMessage) => {
+      // Dispatch custom event for token expiration
+      window.dispatchEvent(new CustomEvent('tokenExpired', { 
+        detail: { message: errorMessage } 
+      }));
+    });
+
+    return () => {
+      setTokenExpiredCallback(null);
+    };
+  }, []);
   const resetInactivityTimer = () => {
     // Clear existing timer
     if (inactivityTimerRef.current) {
@@ -75,7 +89,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
       setLoading(true);
-      const response = await fetch('http://192.168.1.3:5000/api/auth/login', {
+      const response = await fetch('http://192.168.1.9:5000/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -142,7 +156,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = async () => {
+  const logout = async (message = null) => {
     try {
       // Clear inactivity timer
       if (inactivityTimerRef.current) {
@@ -150,7 +164,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       setLoading(true);
-      await fetch('http://192.168.1.3:5000/api/auth/logout', {
+      await fetch('http://192.168.1.9:5000/api/auth/logout', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -184,7 +198,7 @@ export const AuthProvider = ({ children }) => {
         return { success: false, message: 'No token available' };
       }
 
-      const response = await fetch('http://192.168.1.3:5000/api/auth/profile', {
+      const response = await fetch('http://192.168.1.9:5000/api/auth/profile', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

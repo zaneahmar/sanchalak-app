@@ -3,10 +3,12 @@ const router = express.Router();
 const pool = require('../config/database');
 const PDFDocument = require('pdfkit');
 const DebitCreditNote = require('../models/DebitCreditNote');
+const tokenExpiry = require('../middleware/tokenExpiry');
 const tenantAuth = require('../middleware/tenantAuth');
 const { masterPool } = require('../config/tenantDb');
 
-// Apply tenant authentication to all routes
+// Apply token expiry and tenant authentication to all routes
+router.use(tokenExpiry);
 router.use(tenantAuth);
 
 // Get all sales with items

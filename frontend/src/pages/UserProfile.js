@@ -43,7 +43,7 @@ function UserProfile() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://192.168.1.3:5000/api/auth/update-profile', {
+      const response = await fetch('http://192.168.1.9:5000/api/auth/update-profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

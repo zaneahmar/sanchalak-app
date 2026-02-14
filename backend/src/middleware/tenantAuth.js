@@ -1,7 +1,11 @@
+const jwt = require('jsonwebtoken');
 const { masterPool, getTenantPool } = require('../config/tenantDb');
 
+// Load environment variables
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
+
 /**
- * Middleware to authenticate user and attach tenant database connection
+ * Middleware to authenticate user using JWT and attach tenant database connection
  */
 async function tenantAuth(req, res, next) {
   try {
@@ -15,18 +19,30 @@ async function tenantAuth(req, res, next) {
       });
     }
 
-    // Extract token (format: token_userId_timestamp)
+    // Extract token from "Bearer <token>"
     const token = authHeader.replace('Bearer ', '');
-    const tokenParts = token.split('_');
-    
-    if (tokenParts.length < 2) {
+
+    // Verify JWT token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch (err) {
+      // Check if token is expired
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({
+          success: false,
+          message: 'Your Session is Expired Kindly Re-Login',
+          code: 'TOKEN_EXPIRED'
+        });
+      }
+      // For other JWT errors (invalid signature, malformed, etc.)
       return res.status(401).json({
         success: false,
-        message: 'Invalid token format'
+        message: 'Invalid or expired token'
       });
     }
 
-    const userId = tokenParts[1];
+    const userId = decoded.userId;
 
     // Get user from master database
     const result = await masterPool.query(

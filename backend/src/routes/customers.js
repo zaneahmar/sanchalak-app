@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const Customer = require('../models/Customer');
+const tokenExpiry = require('../middleware/tokenExpiry');
 const tenantAuth = require('../middleware/tenantAuth');
 
-// Apply tenant authentication to all routes
+// Apply token expiry and tenant authentication to all routes
+router.use(tokenExpiry);
 router.use(tenantAuth);
 
 // Get all customers

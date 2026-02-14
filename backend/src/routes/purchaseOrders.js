@@ -3,9 +3,11 @@ const router = express.Router();
 const PurchaseOrder = require('../models/PurchaseOrder');
 const Vendor = require('../models/Vendor');
 const DebitCreditNote = require('../models/DebitCreditNote');
+const tokenExpiry = require('../middleware/tokenExpiry');
 const tenantAuth = require('../middleware/tenantAuth');
 
-// Apply tenant authentication to all routes
+// Apply token expiry and tenant authentication to all routes
+router.use(tokenExpiry);
 router.use(tenantAuth);
 
 // Get all purchase orders

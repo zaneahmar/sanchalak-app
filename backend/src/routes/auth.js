@@ -2,7 +2,11 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const { masterPool, createTenantDatabase } = require('../config/tenantDb');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
+const JWT_EXPIRY = process.env.JWT_EXPIRY || '7d';
 
 // Login endpoint
 router.post('/login', async (req, res) => {
@@ -50,8 +54,16 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // In a real application, create a JWT token here
-    const token = `token_${user.id}_${Date.now()}`;
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+        businessName: user.business_name
+      },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRY }
+    );
 
     res.status(200).json({
       success: true,
@@ -285,8 +297,7 @@ router.post('/verify-gst', async (req, res) => {
 // Get current user profile (refresh user data)
 router.get('/profile', async (req, res) => {
   try {
-    // In a real app, you would validate the token and get user ID from it
-    // For now, we'll use a simple token format: token_userId_timestamp
+    // Get token from Authorization header
     const authHeader = req.headers.authorization;
     if (!authHeader) {
       return res.status(401).json({
@@ -296,15 +307,19 @@ router.get('/profile', async (req, res) => {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const tokenParts = token.split('_');
-    if (tokenParts.length < 2) {
+
+    // Verify JWT token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch (err) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid token format'
+        message: 'Invalid or expired token'
       });
     }
 
-    const userId = tokenParts[1];
+    const userId = decoded.userId;
 
     // Get user details
     const result = await masterPool.query(
@@ -351,7 +366,7 @@ router.put('/update-profile', async (req, res) => {
   try {
     const { name, business_name, phone, address, city, gstin } = req.body;
     
-    // Get user ID from token
+    // Get user ID from JWT token
     const authHeader = req.headers.authorization;
     if (!authHeader) {
       return res.status(401).json({
@@ -361,15 +376,19 @@ router.put('/update-profile', async (req, res) => {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const tokenParts = token.split('_');
-    if (tokenParts.length < 2) {
+
+    // Verify JWT token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch (err) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid token format'
+        message: 'Invalid or expired token'
       });
     }
 
-    const userId = tokenParts[1];
+    const userId = decoded.userId;
 
     // Validation
     if (!name || !business_name) {

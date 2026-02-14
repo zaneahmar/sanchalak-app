@@ -6,6 +6,7 @@ import { AuthProvider } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
 import Toaster from './components/Toaster';
 import ProtectedRoute from './components/ProtectedRoute';
+import TokenExpirationHandler from './components/TokenExpirationHandler';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -87,6 +88,7 @@ function App() {
       <AuthProvider>
         <DataProvider>
           <Router>
+            <TokenExpirationHandler />
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />

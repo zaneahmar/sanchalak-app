@@ -1,5 +1,13 @@
 // API Base URL
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://192.168.1.3:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://192.168.1.9:5000/api';
+
+// Callback for handling token expiration
+let tokenExpiredCallback = null;
+
+// Register callback to handle token expiration
+export const setTokenExpiredCallback = (callback) => {
+  tokenExpiredCallback = callback;
+};
 
 // Helper function for API requests
 const apiCall = async (endpoint, options = {}) => {
@@ -30,6 +38,20 @@ const apiCall = async (endpoint, options = {}) => {
     
     if (!response.ok) {
       const error = await response.json();
+      
+      // Handle token expiration (401 status code)
+      if (response.status === 401) {
+        console.warn('Token expired or invalid:', error.message);
+        
+        // Call the token expired callback if registered
+        if (tokenExpiredCallback) {
+          tokenExpiredCallback(error.message);
+        }
+        
+        // Throw error with the message from the server
+        throw new Error(error.message || 'Unauthorized');
+      }
+      
       throw new Error(error.error || `HTTP ${response.status}`);
     }
 

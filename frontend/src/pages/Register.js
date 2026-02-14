@@ -63,7 +63,7 @@ function Register() {
     });
 
     try {
-      const response = await fetch('http://192.168.1.3:5000/api/auth/verify-gst', {
+      const response = await fetch('http://192.168.1.9:5000/api/auth/verify-gst', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -151,7 +151,7 @@ function Register() {
     }
 
     try {
-      const response = await fetch('http://192.168.1.3:5000/api/auth/register', {
+      const response = await fetch('http://192.168.1.9:5000/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -135,7 +135,7 @@ const Billing = () => {
       
       if (billingDetail.order_id) {
         // Fetch order with items using authenticated API call
-        const url = `${process.env.REACT_APP_API_URL || 'http://192.168.1.3:5000/api'}/orders/${billingDetail.order_id}`;
+        const url = `${process.env.REACT_APP_API_URL || 'http://192.168.1.9:5000/api'}/orders/${billingDetail.order_id}`;
         const token = localStorage.getItem('authToken');
         console.log("Fetching order from URL:", url);
         
@@ -165,7 +165,7 @@ const Billing = () => {
         return mappedItems;
       } else if (billingDetail.sale_id) {
         // Fetch sale items with authenticated API call
-        const saleUrl = `${process.env.REACT_APP_API_URL || 'http://192.168.1.3:5000/api'}/sales/${billingDetail.sale_id}`;
+        const saleUrl = `${process.env.REACT_APP_API_URL || 'http://192.168.1.9:5000/api'}/sales/${billingDetail.sale_id}`;
         const token = localStorage.getItem('authToken');
         console.log("Fetching sale from URL:", saleUrl);
         

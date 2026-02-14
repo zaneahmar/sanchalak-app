@@ -71,7 +71,7 @@ npm install
 npm start
 ```
 
-The application will open at `http://192.168.1.3:3000`
+The application will open at `http://192.168.1.9:3000`
 
 ### Available Scripts
 
