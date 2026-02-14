@@ -15,6 +15,8 @@ const Inventory = () => {
     stockStatus: 'all', // 'all', 'low', 'out', 'in-stock'
     category: '',
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const [formData, setFormData] = useState({
     name: '',
     hsn: '',
@@ -156,6 +158,7 @@ const Inventory = () => {
     setShowForm(false);
     setEditingId(null);
     setFormError('');
+    setCurrentPage(1);
     setFormData({
       name: '',
       hsn: '',
@@ -418,44 +421,74 @@ const Inventory = () => {
                 <td colSpan="9" className="no-data">No products found</td>
               </tr>
             ) : (
-              filteredInventory.map(product => {
-                const cost = parseFloat(product.cost || 0);
-                const price = parseFloat(product.price || 0);
-                const margin = cost > 0 ? ((price - cost) / cost * 100).toFixed(1) : 0;
-                const stock = product.stock_quantity || product.stock || 0;
-                return (
-                  <tr key={product.id}>
-                    <td>{product.name}</td>
-                    <td>{product.category || product.size || '-'}</td>
-                    <td>{product.color || '-'}</td>
-                    <td>{cost.toFixed(2)}</td>
-                    <td>{price.toFixed(2)}</td>
-                    <td className={stock <= 10 ? 'low-stock' : ''}>
-                      {stock}
-                    </td>
-                    <td>{margin}%</td>
-                    <td>
-                      <button 
-                        className="btn-action edit"
-                        onClick={() => handleEdit(product)}
-                        disabled={formLoading}
-                      >
-                        Edit
-                      </button>
-                      <button 
-                        className="btn-action delete"
-                        onClick={() => handleDelete(product.id)}
-                        disabled={formLoading}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
+              (() => {
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                const paginatedInventory = filteredInventory.slice(startIndex, endIndex);
+                return paginatedInventory.map(product => {
+                  const cost = parseFloat(product.cost || 0);
+                  const price = parseFloat(product.price || 0);
+                  const margin = cost > 0 ? ((price - cost) / cost * 100).toFixed(1) : 0;
+                  const stock = product.stock_quantity || product.stock || 0;
+                  return (
+                    <tr key={product.id}>
+                      <td>{product.name}</td>
+                      <td>{product.category || product.size || '-'}</td>
+                      <td>{product.color || '-'}</td>
+                      <td>{cost.toFixed(2)}</td>
+                      <td>{price.toFixed(2)}</td>
+                      <td className={stock <= 10 ? 'low-stock' : ''}>
+                        {stock}
+                      </td>
+                      <td>{margin}%</td>
+                      <td>
+                        <button 
+                          className="btn-action edit"
+                          onClick={() => handleEdit(product)}
+                          disabled={formLoading}
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          className="btn-action delete"
+                          onClick={() => handleDelete(product.id)}
+                          disabled={formLoading}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                });
+              })()
             )}
           </tbody>
         </table>
+        
+        {filteredInventory.length > 0 && (
+          <div className="pagination-controls">
+            <div className="pagination-info">
+              Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredInventory.length)} of {filteredInventory.length} items
+            </div>
+            <div className="pagination-buttons">
+              <button 
+                className="btn-pagination" 
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </button>
+              <span className="page-indicator">Page {currentPage} of {Math.ceil(filteredInventory.length / itemsPerPage)}</span>
+              <button 
+                className="btn-pagination"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredInventory.length / itemsPerPage)))}
+                disabled={currentPage === Math.ceil(filteredInventory.length / itemsPerPage)}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

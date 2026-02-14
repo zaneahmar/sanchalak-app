@@ -4,8 +4,9 @@ const pool = require('../config/database');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { masterPool, createTenantDatabase } = require('../config/tenantDb');
-
+console.log('JWT_SECRET from environment:', process.env);
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
+// JWT_EXPIRY should be in format like '1h', '7d', '30m', or '3600s' (not milliseconds)
 const JWT_EXPIRY = process.env.JWT_EXPIRY || '7d';
 
 // Login endpoint

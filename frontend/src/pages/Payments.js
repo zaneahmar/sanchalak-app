@@ -19,7 +19,10 @@ function Payments() {
     paymentStatus: '',
     paymentMethod: '',
     searchTerm: '',
+    invoiceNumber: '',
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const [formData, setFormData] = useState({
     billing_id: '',
     po_id: '',
@@ -211,6 +214,16 @@ function Payments() {
         const customerName = (payment.customer_name || '').toLowerCase();
         const vendorName = (payment.vendor_name || '').toLowerCase();
         if (!customerName.includes(searchLower) && !vendorName.includes(searchLower)) {
+          return false;
+        }
+      }
+      
+      // Filter by invoice/PO number
+      if (filters.invoiceNumber) {
+        const invoiceLower = filters.invoiceNumber.toLowerCase();
+        const invoiceNumber = (payment.invoice_number || '').toLowerCase();
+        const poNumber = (payment.po_number || '').toLowerCase();
+        if (!invoiceNumber.includes(invoiceLower) && !poNumber.includes(invoiceLower)) {
           return false;
         }
       }
@@ -519,50 +532,97 @@ function Payments() {
                 <option value="upi">UPI</option>
               </select>
             </div>
+            <div className="filter-group">
+              <label>Search Invoice</label>
+              <input
+                type="text"
+                placeholder="Search invoice number..."
+                value={filters.invoiceNumber}
+                onChange={(e) => setFilters({ ...filters, invoiceNumber: e.target.value })}
+                className="filter-input"
+              />
+            </div>
           </div>
 
           {getFilteredPayments().length === 0 ? (
             <p className="no-data">No payment records found</p>
           ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Invoice</th>
-                  <th>Customer</th>
-                  <th>Amount</th>
-                  <th>Method</th>
-                  <th>Reference</th>
-                  <th>Date</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {getFilteredPayments().map(payment => (
-                  <tr key={payment.id}>
-                    <td><strong>{payment.invoice_number || payment.po_number}</strong></td>
-                    <td>{payment.customer_name || payment.vendor_name || 'N/A'}</td>
-                    <td className="amount">{parseFloat(payment.amount).toFixed(2)}</td>
-                    <td>{payment.payment_method}</td>
-                    <td>{payment.reference_number || 'N/A'}</td>
-                    <td>{new Date(payment.created_at).toLocaleDateString()}</td>
-                    <td>
-                      <span className="status-badge" style={{backgroundColor: getStatusBadge(payment.status).bg}}>
-                        {payment.status}
-                      </span>
-                    </td>
-                    <td className="actions">
-                      <button 
-                        className="btn-delete" 
-                        onClick={() => handleDelete(payment.id)}
-                      >
-                        Delete
-                      </button>
-                    </td>
+            <>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Invoice</th>
+                    <th>Customer</th>
+                    <th>Amount</th>
+                    <th>Method</th>
+                    <th>Reference</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const filteredPayments = getFilteredPayments();
+                    const startIndex = (currentPage - 1) * itemsPerPage;
+                    const endIndex = startIndex + itemsPerPage;
+                    const paginatedPayments = filteredPayments.slice(startIndex, endIndex);
+                    
+                    return paginatedPayments.map(payment => (
+                      <tr key={payment.id}>
+                        <td><strong>{payment.invoice_number || payment.po_number}</strong></td>
+                        <td>{payment.customer_name || payment.vendor_name || 'N/A'}</td>
+                        <td className="amount">{parseFloat(payment.amount).toFixed(2)}</td>
+                        <td>{payment.payment_method}</td>
+                        <td>{payment.reference_number || 'N/A'}</td>
+                        <td>{new Date(payment.created_at).toLocaleDateString()}</td>
+                        <td>
+                          <span className="status-badge" style={{backgroundColor: getStatusBadge(payment.status).bg}}>
+                            {payment.status}
+                          </span>
+                        </td>
+                        <td className="actions">
+                          <button 
+                            className="btn-delete" 
+                            onClick={() => handleDelete(payment.id)}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ));
+                  })()}
+                </tbody>
+              </table>
+              
+              {(() => {
+                const filteredPayments = getFilteredPayments();
+                return filteredPayments.length > 0 && (
+                  <div className="pagination-controls">
+                    <div className="pagination-info">
+                      Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredPayments.length)} of {filteredPayments.length} payments
+                    </div>
+                    <div className="pagination-buttons">
+                      <button 
+                        className="btn-pagination" 
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                      >
+                        Previous
+                      </button>
+                      <span className="page-indicator">Page {currentPage} of {Math.ceil(filteredPayments.length / itemsPerPage)}</span>
+                      <button 
+                        className="btn-pagination"
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredPayments.length / itemsPerPage)))}
+                        disabled={currentPage === Math.ceil(filteredPayments.length / itemsPerPage)}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+            </>
           )}
         </div>
       )}

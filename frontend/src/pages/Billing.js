@@ -7,10 +7,13 @@ const Billing = () => {
   const [dateFilter, setDateFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [searchText, setSearchText] = useState('');
+  const [invoiceNumberFilter, setInvoiceNumberFilter] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const { success, error: showError, info } = useToaster();
 
   // Fetch invoices from API
@@ -241,8 +244,13 @@ const Billing = () => {
       }
     }
 
-    // Filter by search text
+    // Filter by search text (customer name)
     if (searchText !== '' && !invoice.customer.toLowerCase().includes(searchText.toLowerCase())) {
+      return false;
+    }
+
+    // Filter by invoice number
+    if (invoiceNumberFilter !== '' && !invoice.invoiceNumber.toLowerCase().includes(invoiceNumberFilter.toLowerCase())) {
       return false;
     }
 
@@ -282,6 +290,16 @@ const Billing = () => {
             placeholder="Enter customer name"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
+          />
+        </div>
+
+        <div className="filter-group">
+          <label>Search Invoice</label>
+          <input
+            type="text"
+            placeholder="Enter invoice number"
+            value={invoiceNumberFilter}
+            onChange={(e) => setInvoiceNumberFilter(e.target.value)}
           />
         </div>
       </div>
@@ -333,55 +351,98 @@ const Billing = () => {
         )}
 
         {!loading && !error && (
-          <table className="invoice-table">
-            <thead>
-              <tr>
-                <th>Invoice ID</th>
-                <th>Customer</th>
-                <th>Date</th>
-                <th>Due Date</th>
-                <th>Payment</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredInvoices.map((invoice) => (
-                <tr key={invoice.id}>
-                  <td>{invoice.invoiceNumber}</td>
-                  <td>{invoice.customer}</td>
-                  <td>{invoice.date}</td>
-                  <td>{invoice.dueDate ? invoice.dueDate : 'N/A'}</td>
-                  <td>{invoice.paymentMethod}</td>
-                  <td> {(invoice.amount || 0).toFixed(2)}</td>
-                  <td>
-                    <span className={`status ${invoice.status}`}>
-                      {invoice.status && invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      <button className="btn-action view" onClick={() => handleViewInvoice(invoice)}>
-                        View
-                      </button>
-                      <button className="btn-action download" onClick={() => handleDownload(invoice)}>
-                        Download
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-
-              {!loading && filteredInvoices.length === 0 && (
+          <>
+            <table className="invoice-table">
+              <thead>
                 <tr>
-                  <td colSpan="8" style={{ textAlign: "center" }}>
-                    No invoices found
-                  </td>
+                  <th>Invoice ID</th>
+                  <th>Customer</th>
+                  <th>Date</th>
+                  <th>Due Date</th>
+                  <th>Payment</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Action</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {(() => {
+                  const startIndex = (currentPage - 1) * itemsPerPage;
+                  const endIndex = startIndex + itemsPerPage;
+                  const paginatedInvoices = filteredInvoices.slice(startIndex, endIndex);
+                  
+                  if (paginatedInvoices.length === 0 && filteredInvoices.length > 0) {
+                    return (
+                      <tr>
+                        <td colSpan="8" style={{ textAlign: "center" }}>
+                          No invoices found on this page
+                        </td>
+                      </tr>
+                    );
+                  }
+                  
+                  return paginatedInvoices.map((invoice) => (
+                    <tr key={invoice.id}>
+                      <td>{invoice.invoiceNumber}</td>
+                      <td>{invoice.customer}</td>
+                      <td>{invoice.date}</td>
+                      <td>{invoice.dueDate ? invoice.dueDate : 'N/A'}</td>
+                      <td>{invoice.paymentMethod}</td>
+                      <td> {(invoice.amount || 0).toFixed(2)}</td>
+                      <td>
+                        <span className={`status ${invoice.status}`}>
+                          {invoice.status && invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="action-buttons">
+                          <button className="btn-action view" onClick={() => handleViewInvoice(invoice)}>
+                            View
+                          </button>
+                          <button className="btn-action download" onClick={() => handleDownload(invoice)}>
+                            Download
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ));
+                })()}
+
+                {!loading && filteredInvoices.length === 0 && (
+                  <tr>
+                    <td colSpan="8" style={{ textAlign: "center" }}>
+                      No invoices found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+            
+            {filteredInvoices.length > 0 && (
+              <div className="pagination-controls">
+                <div className="pagination-info">
+                  Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredInvoices.length)} of {filteredInvoices.length} invoices
+                </div>
+                <div className="pagination-buttons">
+                  <button 
+                    className="btn-pagination" 
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </button>
+                  <span className="page-indicator">Page {currentPage} of {Math.ceil(filteredInvoices.length / itemsPerPage)}</span>
+                  <button 
+                    className="btn-pagination"
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredInvoices.length / itemsPerPage)))}
+                    disabled={currentPage === Math.ceil(filteredInvoices.length / itemsPerPage)}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 

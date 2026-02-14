@@ -16,6 +16,8 @@ function Vendors() {
     city: '',
     state: '',
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(9);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -356,48 +358,83 @@ function Vendors() {
         {getFilteredVendors().length === 0 ? (
           <p className="no-data">No vendors found</p>
         ) : (
-          getFilteredVendors().map(vendor => (
-            <div key={vendor.id} className="vendor-card">
-              <div className="vendor-header">
-                <h3>{vendor.name}</h3>
-                {vendor.gstin && <p className="vendor-gstin">GSTIN: {vendor.gstin}</p>}
-              </div>
-              
-              <div className="vendor-details">
-                {vendor.phone && <p><strong>Phone:</strong> {vendor.phone}</p>}
-                {vendor.email && <p><strong>Email:</strong> {vendor.email}</p>}
-                {vendor.address && <p><strong>Address:</strong> {vendor.address}</p>}
-                {vendor.city && <p><strong>City:</strong> {vendor.city}</p>}
-                {vendor.state && <p><strong>State:</strong> {vendor.state}</p>}
-                {vendor.zip_code && <p><strong>Zip Code:</strong> {vendor.zip_code}</p>}
-                {vendor.tax_id && <p><strong>Tax ID:</strong> {vendor.tax_id}</p>}
-                {vendor.bank_account && <p><strong>Bank Account:</strong> {vendor.bank_account}</p>}
-              </div>
+          (() => {
+            const filteredVendors = getFilteredVendors();
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedVendors = filteredVendors.slice(startIndex, endIndex);
+            
+            return paginatedVendors.map(vendor => (
+              <div key={vendor.id} className="vendor-card">
+                <div className="vendor-header">
+                  <h3>{vendor.name}</h3>
+                  {vendor.gstin && <p className="vendor-gstin">GSTIN: {vendor.gstin}</p>}
+                </div>
+                
+                <div className="vendor-details">
+                  {vendor.phone && <p><strong>Phone:</strong> {vendor.phone}</p>}
+                  {vendor.email && <p><strong>Email:</strong> {vendor.email}</p>}
+                  {vendor.address && <p><strong>Address:</strong> {vendor.address}</p>}
+                  {vendor.city && <p><strong>City:</strong> {vendor.city}</p>}
+                  {vendor.state && <p><strong>State:</strong> {vendor.state}</p>}
+                  {vendor.zip_code && <p><strong>Zip Code:</strong> {vendor.zip_code}</p>}
+                  {vendor.tax_id && <p><strong>Tax ID:</strong> {vendor.tax_id}</p>}
+                  {vendor.bank_account && <p><strong>Bank Account:</strong> {vendor.bank_account}</p>}
+                </div>
 
-              <div className="vendor-actions">
-                <Link 
-                  to={`/vendors/${vendor.id}/debit-credit`}
-                  className="btn-action debit-credit"
-                >
-                  Debit/Credit
-                </Link>
-                <button 
-                  className="btn-action edit"
-                  onClick={() => handleEdit(vendor)}
-                >
-                  Edit
-                </button>
-                <button 
-                  className="btn-action delete"
-                  onClick={() => handleDelete(vendor.id)}
-                >
-                  Delete
-                </button>
+                <div className="vendor-actions">
+                  <Link 
+                    to={`/vendors/${vendor.id}/debit-credit`}
+                    className="btn-action debit-credit"
+                  >
+                    Debit/Credit
+                  </Link>
+                  <button 
+                    className="btn-action edit"
+                    onClick={() => handleEdit(vendor)}
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    className="btn-action delete"
+                    onClick={() => handleDelete(vendor.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
-            </div>
-          ))
+            ));
+          })()
         )}
       </div>
+      
+      {(() => {
+        const filteredVendors = getFilteredVendors();
+        return filteredVendors.length > 0 && (
+          <div className="pagination-controls">
+            <div className="pagination-info">
+              Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredVendors.length)} of {filteredVendors.length} vendors
+            </div>
+            <div className="pagination-buttons">
+              <button 
+                className="btn-pagination" 
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </button>
+              <span className="page-indicator">Page {currentPage} of {Math.ceil(filteredVendors.length / itemsPerPage)}</span>
+              <button 
+                className="btn-pagination"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredVendors.length / itemsPerPage)))}
+                disabled={currentPage === Math.ceil(filteredVendors.length / itemsPerPage)}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

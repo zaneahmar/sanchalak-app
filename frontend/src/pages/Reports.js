@@ -21,6 +21,8 @@ function Reports() {
   const [loading, setLoading] = useState(false);
   const [expandedCustomer, setExpandedCustomer] = useState(null);
   const [expandedVendor, setExpandedVendor] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   const generateReport = async (e) => {
     e.preventDefault();
@@ -479,19 +481,50 @@ function Reports() {
                       </td>
                     </tr>
                   ) : (
-                    reportData.map((row, idx) => (
-                      <tr key={idx}>
-                        <td>{new Date(row.sale_date).toLocaleDateString()}</td>
-                        <td>{row.orders}</td>
-                        <td>{row.items_sold}</td>
-                        <td>{parseFloat(row.daily_revenue).toFixed(2)}</td>
-                        <td>{row.total_quantity}</td>
-                        <td>{row.category || 'N/A'}</td>
-                      </tr>
-                    ))
+                    (() => {
+                      const startIndex = (currentPage - 1) * itemsPerPage;
+                      const endIndex = startIndex + itemsPerPage;
+                      const paginatedData = reportData.slice(startIndex, endIndex);
+                      
+                      return paginatedData.map((row, idx) => (
+                        <tr key={idx}>
+                          <td>{new Date(row.sale_date).toLocaleDateString()}</td>
+                          <td>{row.orders}</td>
+                          <td>{row.items_sold}</td>
+                          <td>{parseFloat(row.daily_revenue).toFixed(2)}</td>
+                          <td>{row.total_quantity}</td>
+                          <td>{row.category || 'N/A'}</td>
+                        </tr>
+                      ));
+                    })()
                   )}
                 </tbody>
               </table>
+              
+              {reportData.length > 0 && (
+                <div className="pagination-controls">
+                  <div className="pagination-info">
+                    Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, reportData.length)} of {reportData.length} records
+                  </div>
+                  <div className="pagination-buttons">
+                    <button 
+                      className="btn-pagination" 
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </button>
+                    <span className="page-indicator">Page {currentPage} of {Math.ceil(reportData.length / itemsPerPage)}</span>
+                    <button 
+                      className="btn-pagination"
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(reportData.length / itemsPerPage)))}
+                      disabled={currentPage === Math.ceil(reportData.length / itemsPerPage)}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -626,65 +659,70 @@ function Reports() {
                       </td>
                     </tr>
                   ) : (
-                    reportData.map(customer => (
-                      <React.Fragment key={customer.id}>
-                        <tr>
-                          <td>{customer.name}</td>
-                          <td>{customer.email}</td>
-                          <td>{customer.total_orders}</td>
-                          <td>{parseFloat(customer.total_spent).toFixed(2)}</td>
-                          <td>{parseFloat(customer.paid_amount).toFixed(2)}</td>
-                          <td className="due">{parseFloat(customer.due_amount).toFixed(2)}</td>
-                          <td>
-                            <button 
-                              className="btn-view-payments"
-                              onClick={() => setExpandedCustomer(expandedCustomer === customer.id ? null : customer.id)}
-                            >
-                              {expandedCustomer === customer.id ? '▼ Hide' : '▶ View'} Payments
-                            </button>
-                          </td>
-                        </tr>
-                        {expandedCustomer === customer.id && (
-                          <tr className="payment-history-row">
-                            <td colSpan="7">
-                              <div className="payment-history-container">
-                                <div className="payment-history-header">
-                                  <h4>Payment History for {customer.name}</h4>
-                                  <button 
-                                    className="btn-print-payments"
-                                    onClick={() => handlePrintCustomerPayments(customer)}
-                                    title="Print Payment History"
-                                  >
-                                    🖨️ Print
-                                  </button>
-                                </div>
-                                
-                                {/* Payments Section */}
-                                {customer.payment_history && customer.payment_history.length > 0 ? (
-                                  <div className="transactions-section">
-                                    <h5 style={{marginTop: '10px', marginBottom: '10px', color: '#2e7d32'}}>💰 Payments Received</h5>
-                                    <table className="payment-history-table">
-                                      <thead>
-                                        <tr>
-                                          <th>Date</th>
-                                          <th>Invoice</th>
-                                          <th>Amount Paid</th>
-                                          <th>Payment Method</th>
-                                          <th>Reference</th>
-                                          <th>Notes</th>
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        {customer.payment_history.map(payment => (
-                                          <tr key={`payment-${payment.id}`}>
-                                            <td>{new Date(payment.payment_date).toLocaleDateString()}</td>
-                                            <td>{payment.invoice_number || 'N/A'}</td>
-                                            <td style={{color: '#2e7d32', fontWeight: '600'}}>{parseFloat(payment.amount).toFixed(2)}</td>
-                                            <td>{payment.payment_method}</td>
-                                            <td>{payment.reference_number || '-'}</td>
-                                            <td>{payment.notes || '-'}</td>
+                    (() => {
+                      const startIndex = (currentPage - 1) * itemsPerPage;
+                      const endIndex = startIndex + itemsPerPage;
+                      const paginatedCustomers = reportData.slice(startIndex, endIndex);
+                      
+                      return paginatedCustomers.map(customer => (
+                        <React.Fragment key={customer.id}>
+                          <tr>
+                            <td>{customer.name}</td>
+                            <td>{customer.email}</td>
+                            <td>{customer.total_orders}</td>
+                            <td>{parseFloat(customer.total_spent).toFixed(2)}</td>
+                            <td>{parseFloat(customer.paid_amount).toFixed(2)}</td>
+                            <td className="due">{parseFloat(customer.due_amount).toFixed(2)}</td>
+                            <td>
+                              <button 
+                                className="btn-view-payments"
+                                onClick={() => setExpandedCustomer(expandedCustomer === customer.id ? null : customer.id)}
+                              >
+                                {expandedCustomer === customer.id ? '▼ Hide' : '▶ View'} Payments
+                              </button>
+                            </td>
+                          </tr>
+                          {expandedCustomer === customer.id && (
+                            <tr className="payment-history-row">
+                              <td colSpan="7">
+                                <div className="payment-history-container">
+                                  <div className="payment-history-header">
+                                    <h4>Payment History for {customer.name}</h4>
+                                    <button 
+                                      className="btn-print-payments"
+                                      onClick={() => handlePrintCustomerPayments(customer)}
+                                      title="Print Payment History"
+                                    >
+                                      🖨️ Print
+                                    </button>
+                                  </div>
+                                  
+                                  {/* Payments Section */}
+                                  {customer.payment_history && customer.payment_history.length > 0 ? (
+                                    <div className="transactions-section">
+                                      <h5 style={{marginTop: '10px', marginBottom: '10px', color: '#2e7d32'}}>💰 Payments Received</h5>
+                                      <table className="payment-history-table">
+                                        <thead>
+                                          <tr>
+                                            <th>Date</th>
+                                            <th>Invoice</th>
+                                            <th>Amount Paid</th>
+                                            <th>Payment Method</th>
+                                            <th>Reference</th>
+                                            <th>Notes</th>
                                           </tr>
-                                        ))}
+                                        </thead>
+                                        <tbody>
+                                          {customer.payment_history.map(payment => (
+                                            <tr key={`payment-${payment.id}`}>
+                                              <td>{new Date(payment.payment_date).toLocaleDateString()}</td>
+                                              <td>{payment.invoice_number || 'N/A'}</td>
+                                              <td style={{color: '#2e7d32', fontWeight: '600'}}>{parseFloat(payment.amount).toFixed(2)}</td>
+                                              <td>{payment.payment_method}</td>
+                                              <td>{payment.reference_number || '-'}</td>
+                                              <td>{payment.notes || '-'}</td>
+                                            </tr>
+                                          ))}
                                         <tr className="payment-total-row">
                                           <td colSpan="2"><strong>Total Payments</strong></td>
                                           <td><strong style={{color: '#2e7d32'}}>{customer.payment_history.reduce((sum, p) => sum + parseFloat(p.amount), 0).toFixed(2)}</strong></td>
@@ -846,10 +884,36 @@ function Reports() {
                           </tr>
                         )}
                       </React.Fragment>
-                    ))
+                      ));
+                    })()
                   )}
                 </tbody>
               </table>
+              
+              {reportData.length > 0 && (
+                <div className="pagination-controls">
+                  <div className="pagination-info">
+                    Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, reportData.length)} of {reportData.length} customers
+                  </div>
+                  <div className="pagination-buttons">
+                    <button 
+                      className="btn-pagination" 
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </button>
+                    <span className="page-indicator">Page {currentPage} of {Math.ceil(reportData.length / itemsPerPage)}</span>
+                    <button 
+                      className="btn-pagination"
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(reportData.length / itemsPerPage)))}
+                      disabled={currentPage === Math.ceil(reportData.length / itemsPerPage)}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -917,23 +981,28 @@ function Reports() {
                       </td>
                     </tr>
                   ) : (
-                    reportData.map(vendor => (
-                      <React.Fragment key={vendor.id}>
-                        <tr>
-                          <td>{vendor.name}</td>
-                          <td>{vendor.email}</td>
-                          <td>{vendor.phone || '-'}</td>
-                          <td>{vendor.total_orders}</td>
-                          <td>{parseFloat(vendor.total_purchased).toFixed(2)}</td>
-                          <td>{parseFloat(vendor.paid_amount).toFixed(2)}</td>
-                          <td className="due">{parseFloat(vendor.due_amount).toFixed(2)}</td>
-                          <td>
-                            <button 
-                              className="btn-view-payments"
-                              onClick={() => setExpandedVendor(expandedVendor === vendor.id ? null : vendor.id)}
-                            >
-                              {expandedVendor === vendor.id ? '▼ Hide' : '▶ View'} Payments
-                            </button>
+                    (() => {
+                      const startIndex = (currentPage - 1) * itemsPerPage;
+                      const endIndex = startIndex + itemsPerPage;
+                      const paginatedVendors = reportData.slice(startIndex, endIndex);
+                      
+                      return paginatedVendors.map(vendor => (
+                        <React.Fragment key={vendor.id}>
+                          <tr>
+                            <td>{vendor.name}</td>
+                            <td>{vendor.email}</td>
+                            <td>{vendor.phone || '-'}</td>
+                            <td>{vendor.total_orders}</td>
+                            <td>{parseFloat(vendor.total_purchased).toFixed(2)}</td>
+                            <td>{parseFloat(vendor.paid_amount).toFixed(2)}</td>
+                            <td className="due">{parseFloat(vendor.due_amount).toFixed(2)}</td>
+                            <td>
+                              <button 
+                                className="btn-view-payments"
+                                onClick={() => setExpandedVendor(expandedVendor === vendor.id ? null : vendor.id)}
+                              >
+                                {expandedVendor === vendor.id ? '▼ Hide' : '▶ View'} Payments
+                              </button>
                           </td>
                         </tr>
                         {expandedVendor === vendor.id && (
@@ -1138,10 +1207,36 @@ function Reports() {
                           </tr>
                         )}
                       </React.Fragment>
-                    ))
+                      ));
+                    })()
                   )}
                 </tbody>
               </table>
+              
+              {reportData.length > 0 && (
+                <div className="pagination-controls">
+                  <div className="pagination-info">
+                    Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, reportData.length)} of {reportData.length} vendors
+                  </div>
+                  <div className="pagination-buttons">
+                    <button 
+                      className="btn-pagination" 
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </button>
+                    <span className="page-indicator">Page {currentPage} of {Math.ceil(reportData.length / itemsPerPage)}</span>
+                    <button 
+                      className="btn-pagination"
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(reportData.length / itemsPerPage)))}
+                      disabled={currentPage === Math.ceil(reportData.length / itemsPerPage)}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -1203,18 +1298,49 @@ function Reports() {
                       </td>
                     </tr>
                   ) : (
-                    reportData.map(product => (
-                      <tr key={product.id}>
-                        <td>{product.name}</td>
-                        <td>{product.category}</td>
-                        <td>{product.quantity_on_hand}</td>
-                        <td>{parseFloat(product.inventory_value).toFixed(2)}</td>
-                        <td>{parseFloat(product.retail_value).toFixed(2)}</td>
-                      </tr>
-                    ))
+                    (() => {
+                      const startIndex = (currentPage - 1) * itemsPerPage;
+                      const endIndex = startIndex + itemsPerPage;
+                      const paginatedInventory = reportData.slice(startIndex, endIndex);
+                      
+                      return paginatedInventory.map(product => (
+                        <tr key={product.id}>
+                          <td>{product.name}</td>
+                          <td>{product.category}</td>
+                          <td>{product.quantity_on_hand}</td>
+                          <td>{parseFloat(product.inventory_value).toFixed(2)}</td>
+                          <td>{parseFloat(product.retail_value).toFixed(2)}</td>
+                        </tr>
+                      ));
+                    })()
                   )}
                 </tbody>
               </table>
+              
+              {reportData.length > 0 && (
+                <div className="pagination-controls">
+                  <div className="pagination-info">
+                    Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, reportData.length)} of {reportData.length} products
+                  </div>
+                  <div className="pagination-buttons">
+                    <button 
+                      className="btn-pagination" 
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </button>
+                    <span className="page-indicator">Page {currentPage} of {Math.ceil(reportData.length / itemsPerPage)}</span>
+                    <button 
+                      className="btn-pagination"
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(reportData.length / itemsPerPage)))}
+                      disabled={currentPage === Math.ceil(reportData.length / itemsPerPage)}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

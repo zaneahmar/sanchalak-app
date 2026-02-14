@@ -20,6 +20,8 @@ const Sales = () => {
     dateFrom: '',
     dateTo: '',
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   const handleAddItem = (productId) => {
     if (!productId) return;
@@ -406,66 +408,103 @@ const Sales = () => {
         {getFilteredSales().length === 0 ? (
           <p className="no-data">No sales found</p>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Sale ID</th>
-                <th>Customer</th>
-                <th>Items</th>
-                <th>Subtotal</th>
-                <th>GST</th>
-                <th>Total Amount</th>
-                <th>Payment</th>
-                <th>Sale Date</th>
-                <th>Due Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {getFilteredSales().map(sale => {
-                const customer = sale.customer_id ? customers.find(c => c.id === sale.customer_id) : null;
-                const customerName = sale.customer_name || customer?.name || 'Walk-in Customer';
-                const subtotal = sale.subtotal || 0;
-                const gstAmount = sale.gst_amount || 0;
-                const totalAmount = sale.total_amount || sale.totalAmount || 0;
-                const gstPercentageVal = sale.gst_percentage || 0;
-                const paymentMethod = sale.payment_method || sale.paymentMethod || 'cash';
-                const saleDate = sale.created_at || sale.createdAt || new Date().toISOString();
-                const itemsArray = Array.isArray(sale.items) ? sale.items : [];
-                return (
-                  <tr key={sale.id}>
-                    <td>{sale.id}</td>
-                    <td>{customerName}</td>
-                    <td>{itemsArray.length}</td>
-                    <td>{parseFloat(subtotal).toFixed(2)}</td>
-                    <td>{parseFloat(gstAmount).toFixed(2)} ({gstPercentageVal}%)</td>
-                    <td>{parseFloat(totalAmount).toFixed(2)}</td>
-                    <td className="payment-method">{paymentMethod}</td>
-                    <td>{new Date(sale.sale_date || saleDate).toLocaleDateString()}</td>
-                    <td>{sale.due_date ? new Date(sale.due_date).toLocaleDateString() : 'N/A'}</td>
-                    <td>
-                      <button 
-                        className="btn-action edit"
-                        onClick={() => handleEditSale(sale)}
-                      >
-                        Edit
-                      </button>
-                      <button 
-                        className="btn-action delete"
-                        onClick={() => {
-                          if (window.confirm('Delete this sale?')) {
-                            deleteSale(sale.id);
-                          }
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <>
+            <table>
+              <thead>
+                <tr>
+                  <th>Sale ID</th>
+                  <th>Customer</th>
+                  <th>Items</th>
+                  <th>Subtotal</th>
+                  <th>GST</th>
+                  <th>Total Amount</th>
+                  <th>Payment</th>
+                  <th>Sale Date</th>
+                  <th>Due Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(() => {
+                  const filteredSales = getFilteredSales();
+                  const startIndex = (currentPage - 1) * itemsPerPage;
+                  const endIndex = startIndex + itemsPerPage;
+                  const paginatedSales = filteredSales.slice(startIndex, endIndex);
+                  
+                  return paginatedSales.map(sale => {
+                    const customer = sale.customer_id ? customers.find(c => c.id === sale.customer_id) : null;
+                    const customerName = sale.customer_name || customer?.name || 'Walk-in Customer';
+                    const subtotal = sale.subtotal || 0;
+                    const gstAmount = sale.gst_amount || 0;
+                    const totalAmount = sale.total_amount || sale.totalAmount || 0;
+                    const gstPercentageVal = sale.gst_percentage || 0;
+                    const paymentMethod = sale.payment_method || sale.paymentMethod || 'cash';
+                    const saleDate = sale.created_at || sale.createdAt || new Date().toISOString();
+                    const itemsArray = Array.isArray(sale.items) ? sale.items : [];
+                    return (
+                      <tr key={sale.id}>
+                        <td>{sale.id}</td>
+                        <td>{customerName}</td>
+                        <td>{itemsArray.length}</td>
+                        <td>{parseFloat(subtotal).toFixed(2)}</td>
+                        <td>{parseFloat(gstAmount).toFixed(2)} ({gstPercentageVal}%)</td>
+                        <td>{parseFloat(totalAmount).toFixed(2)}</td>
+                        <td className="payment-method">{paymentMethod}</td>
+                        <td>{new Date(sale.sale_date || saleDate).toLocaleDateString()}</td>
+                        <td>{sale.due_date ? new Date(sale.due_date).toLocaleDateString() : 'N/A'}</td>
+                        <td>
+                          <button 
+                            className="btn-action edit"
+                            onClick={() => handleEditSale(sale)}
+                          >
+                            Edit
+                          </button>
+                          <button 
+                            className="btn-action delete"
+                            onClick={() => {
+                              if (window.confirm('Delete this sale?')) {
+                                deleteSale(sale.id);
+                              }
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  });
+                })()}
+              </tbody>
+            </table>
+            
+            {(() => {
+              const filteredSales = getFilteredSales();
+              return (
+                <div className="pagination-controls">
+                  <div className="pagination-info">
+                    Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredSales.length)} of {filteredSales.length} sales
+                  </div>
+                  <div className="pagination-buttons">
+                    <button 
+                      className="btn-pagination" 
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </button>
+                    <span className="page-indicator">Page {currentPage} of {Math.ceil(filteredSales.length / itemsPerPage)}</span>
+                    <button 
+                      className="btn-pagination"
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredSales.length / itemsPerPage)))}
+                      disabled={currentPage === Math.ceil(filteredSales.length / itemsPerPage)}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+          </>
         )}
       </div>
     </div>

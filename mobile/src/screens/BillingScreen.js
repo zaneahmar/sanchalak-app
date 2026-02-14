@@ -25,6 +25,7 @@ const BillingScreen = ({ navigation }) => {
   const [dateFilter, setDateFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [searchText, setSearchText] = useState('');
+  const [invoiceNumberFilter, setInvoiceNumberFilter] = useState('');
   const { showToast } = useToaster();
 
   useEffect(() => {
@@ -142,6 +143,14 @@ const BillingScreen = ({ navigation }) => {
         }
       }
 
+      // Invoice number filter
+      if (invoiceNumberFilter !== '') {
+        const invoiceNumber = bill.invoice_number || '';
+        if (!invoiceNumber.toLowerCase().includes(invoiceNumberFilter.toLowerCase())) {
+          return false;
+        }
+      }
+
       return true;
     });
   };
@@ -222,6 +231,21 @@ const BillingScreen = ({ navigation }) => {
           />
           {searchText.length > 0 && (
             <TouchableOpacity onPress={() => setSearchText('')}>
+              <Ionicons name="close-circle" size={18} color="#8A94A6" />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <View style={styles.searchRow}>
+          <Ionicons name="search" size={18} color="#8A94A6" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Enter invoice number"
+            value={invoiceNumberFilter}
+            onChangeText={setInvoiceNumberFilter}
+          />
+          {invoiceNumberFilter.length > 0 && (
+            <TouchableOpacity onPress={() => setInvoiceNumberFilter('')}>
               <Ionicons name="close-circle" size={18} color="#8A94A6" />
             </TouchableOpacity>
           )}

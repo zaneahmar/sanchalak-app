@@ -24,6 +24,7 @@ const PaymentsScreen = ({ navigation }) => {
     status: '',
     method: '',
     searchTerm: '',
+    invoiceNumber: '',
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -98,6 +99,12 @@ const PaymentsScreen = ({ navigation }) => {
       const customerName = (payment.customer_name || '').toLowerCase();
       const vendorName = (payment.vendor_name || '').toLowerCase();
       if (!customerName.includes(search) && !vendorName.includes(search)) return false;
+    }
+    if (filters.invoiceNumber) {
+      const invoiceSearch = filters.invoiceNumber.toLowerCase();
+      const invoiceNumber = (payment.invoice_number || '').toLowerCase();
+      const poNumber = (payment.po_number || '').toLowerCase();
+      if (!invoiceNumber.includes(invoiceSearch) && !poNumber.includes(invoiceSearch)) return false;
     }
     return true;
   });
@@ -181,6 +188,25 @@ const PaymentsScreen = ({ navigation }) => {
                 {filters.searchTerm.length > 0 && (
                   <TouchableOpacity
                     onPress={() => setFilters((prev) => ({ ...prev, searchTerm: '' }))}
+                  >
+                    <Ionicons name="close-circle" size={18} color="#8A94A6" />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <View style={styles.searchRow}>
+                <Ionicons name="search" size={18} color="#8A94A6" />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search invoice/PO number"
+                  value={filters.invoiceNumber}
+                  onChangeText={(value) =>
+                    setFilters((prev) => ({ ...prev, invoiceNumber: value }))
+                  }
+                />
+                {filters.invoiceNumber.length > 0 && (
+                  <TouchableOpacity
+                    onPress={() => setFilters((prev) => ({ ...prev, invoiceNumber: '' }))}
                   >
                     <Ionicons name="close-circle" size={18} color="#8A94A6" />
                   </TouchableOpacity>

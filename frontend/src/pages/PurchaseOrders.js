@@ -15,6 +15,8 @@ function PurchaseOrders() {
     vendor: '',
     status: '',
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const [formData, setFormData] = useState({
     po_number: '',
     vendor_id: '',
@@ -601,51 +603,65 @@ function PurchaseOrders() {
             </tr>
           </thead>
           <tbody>
-            {getFilteredOrders().map(order => (
-              <React.Fragment key={order.id}>
-                <tr>
-                  <td>
-                    <button 
-                      className="btn-expand"
-                      onClick={() => setExpandedPO(expandedPO === order.id ? null : order.id)}
-                    >
-                      {expandedPO === order.id ? '▼' : '▶'}
-                    </button>
-                  </td>
-                  <td>{order.po_number}</td>
-                  <td>{getVendorName(order.vendor_id)}</td>
-                  <td>{formatCurrency(order.total_amount)}</td>
-                  <td>
-                    <span className={`status ${order.status}`}>
-                      {order.status && order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                    </span>
-                  </td>
-                  <td>{order.expected_delivery ? new Date(order.expected_delivery).toLocaleDateString() : 'N/A'}</td>
-                  <td className="actions">
-                    <button className="btn-edit" onClick={() => handleEdit(order)}>Edit</button>
-                    <button className="btn-delete" onClick={() => handleDelete(order.id)}>Delete</button>
-                  </td>
-                </tr>
-                {expandedPO === order.id && order.items && order.items.length > 0 && (
-                  <tr className="expand-row">
-                    <td colSpan="7">
-                      <div className="items-details">
-                        <h4>Items in this Purchase Order</h4>
-                        <table className="items-details-table">
-                          <thead>
-                            <tr>
-                              <th>Product</th>
-                              <th>Size</th>
-                              <th>Quantity</th>
-                              <th>HSN Code</th>
-                              <th>Unit Price</th>
-                              <th>Amount</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {order.items.map((item, idx) => (
-                              <tr key={idx}>
-                                <td>{item.product_name}</td>
+            {(() => {
+              const filteredOrders = getFilteredOrders();
+              const startIndex = (currentPage - 1) * itemsPerPage;
+              const endIndex = startIndex + itemsPerPage;
+              const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
+              
+              if (paginatedOrders.length === 0 && filteredOrders.length > 0) {
+                return (
+                  <tr>
+                    <td colSpan="7" className="no-data">No purchase orders found on this page</td>
+                  </tr>
+                );
+              }
+              
+              return paginatedOrders.map(order => (
+                <React.Fragment key={order.id}>
+                  <tr>
+                    <td>
+                      <button 
+                        className="btn-expand"
+                        onClick={() => setExpandedPO(expandedPO === order.id ? null : order.id)}
+                      >
+                        {expandedPO === order.id ? '▼' : '▶'}
+                      </button>
+                    </td>
+                    <td>{order.po_number}</td>
+                    <td>{getVendorName(order.vendor_id)}</td>
+                    <td>{formatCurrency(order.total_amount)}</td>
+                    <td>
+                      <span className={`status ${order.status}`}>
+                        {order.status && order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                      </span>
+                    </td>
+                    <td>{order.expected_delivery ? new Date(order.expected_delivery).toLocaleDateString() : 'N/A'}</td>
+                    <td className="actions">
+                      <button className="btn-edit" onClick={() => handleEdit(order)}>Edit</button>
+                      <button className="btn-delete" onClick={() => handleDelete(order.id)}>Delete</button>
+                    </td>
+                  </tr>
+                  {expandedPO === order.id && order.items && order.items.length > 0 && (
+                    <tr className="expand-row">
+                      <td colSpan="7">
+                        <div className="items-details">
+                          <h4>Items in this Purchase Order</h4>
+                          <table className="items-details-table">
+                            <thead>
+                              <tr>
+                                <th>Product</th>
+                                <th>Size</th>
+                                <th>Quantity</th>
+                                <th>HSN Code</th>
+                                <th>Unit Price</th>
+                                <th>Amount</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {order.items.map((item, idx) => (
+                                <tr key={idx}>
+                                  <td>{item.product_name}</td>
                                 <td>{item.size}</td>
                                 <td>{item.quantity}</td>
                                 <td>{item.hsn_code || '-'}</td>
@@ -660,9 +676,38 @@ function PurchaseOrders() {
                   </tr>
                 )}
               </React.Fragment>
-            ))}
+              ));
+            })()}
           </tbody>
         </table>
+        
+        {(() => {
+          const filteredOrders = getFilteredOrders();
+          return filteredOrders.length > 0 && (
+            <div className="pagination-controls">
+              <div className="pagination-info">
+                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredOrders.length)} of {filteredOrders.length} orders
+              </div>
+              <div className="pagination-buttons">
+                <button 
+                  className="btn-pagination" 
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </button>
+                <span className="page-indicator">Page {currentPage} of {Math.ceil(filteredOrders.length / itemsPerPage)}</span>
+                <button 
+                  className="btn-pagination"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredOrders.length / itemsPerPage)))}
+                  disabled={currentPage === Math.ceil(filteredOrders.length / itemsPerPage)}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

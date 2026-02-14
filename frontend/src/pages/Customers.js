@@ -14,6 +14,8 @@ const Customers = () => {
     city: '',
     state: '',
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(9);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -330,48 +332,83 @@ const Customers = () => {
         {getFilteredCustomers().length === 0 ? (
           <p className="no-data">No customers found</p>
         ) : (
-          getFilteredCustomers().map(customer => (
-            <div key={customer.id} className="customer-card">
-              <div className="customer-header">
-                <h3>{customer.name}</h3>
-                {customer.businessName && <p className="business-name">{customer.businessName}</p>}
-              </div>
-              
-              <div className="customer-details">
-                <p><strong>Phone:</strong> {customer.phone}</p>
-                {customer.email && <p><strong>Email:</strong> {customer.email}</p>}
-                {customer.address && <p><strong>Address:</strong> {customer.address}</p>}
-                {customer.city && <p><strong>City:</strong> {customer.city}</p>}
-                {customer.state && <p><strong>State:</strong> {customer.state}</p>}
-                {customer.zip_code && <p><strong>Zip Code:</strong> {customer.zip_code}</p>}
-              </div>
+          (() => {
+            const filteredCustomers = getFilteredCustomers();
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedCustomers = filteredCustomers.slice(startIndex, endIndex);
+            
+            return paginatedCustomers.map(customer => (
+              <div key={customer.id} className="customer-card">
+                <div className="customer-header">
+                  <h3>{customer.name}</h3>
+                  {customer.businessName && <p className="business-name">{customer.businessName}</p>}
+                </div>
+                
+                <div className="customer-details">
+                  <p><strong>Phone:</strong> {customer.phone}</p>
+                  {customer.email && <p><strong>Email:</strong> {customer.email}</p>}
+                  {customer.address && <p><strong>Address:</strong> {customer.address}</p>}
+                  {customer.city && <p><strong>City:</strong> {customer.city}</p>}
+                  {customer.state && <p><strong>State:</strong> {customer.state}</p>}
+                  {customer.zip_code && <p><strong>Zip Code:</strong> {customer.zip_code}</p>}
+                </div>
 
-              <div className="customer-actions">
-                <Link 
-                  to={`/customers/${customer.id}/debit-credit`}
-                  className="btn-action debit-credit"
-                >
-                  Debit/Credit
-                </Link>
-                <button 
-                  className="btn-action edit"
-                  onClick={() => handleEdit(customer)}
-                  disabled={formLoading}
-                >
-                  Edit
-                </button>
-                <button 
-                  className="btn-action delete"
-                  onClick={() => handleDelete(customer.id)}
-                  disabled={formLoading}
-                >
-                  Delete
-                </button>
+                <div className="customer-actions">
+                  <Link 
+                    to={`/customers/${customer.id}/debit-credit`}
+                    className="btn-action debit-credit"
+                  >
+                    Debit/Credit
+                  </Link>
+                  <button 
+                    className="btn-action edit"
+                    onClick={() => handleEdit(customer)}
+                    disabled={formLoading}
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    className="btn-action delete"
+                    onClick={() => handleDelete(customer.id)}
+                    disabled={formLoading}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
-            </div>
-          ))
+            ));
+          })()
         )}
       </div>
+      
+      {(() => {
+        const filteredCustomers = getFilteredCustomers();
+        return filteredCustomers.length > 0 && (
+          <div className="pagination-controls">
+            <div className="pagination-info">
+              Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredCustomers.length)} of {filteredCustomers.length} customers
+            </div>
+            <div className="pagination-buttons">
+              <button 
+                className="btn-pagination" 
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </button>
+              <span className="page-indicator">Page {currentPage} of {Math.ceil(filteredCustomers.length / itemsPerPage)}</span>
+              <button 
+                className="btn-pagination"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredCustomers.length / itemsPerPage)))}
+                disabled={currentPage === Math.ceil(filteredCustomers.length / itemsPerPage)}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };
